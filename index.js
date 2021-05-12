@@ -1,30 +1,56 @@
 import { ApolloServer, gql } from "apollo-server"
 
 const typeDefs = gql`
-  type Book {
-    title: String
-    author: String
+  type Ville {
+    nom: String
+    codePostal: Int
+    immeubles: [Immeuble]
+  }
+
+  type Immeuble {
+    nom: String
+    adresse: String
+    appartements: [Appartement]
+  }
+
+  type Appartement {
+    numero: Int
+    nbPieces: Int
   }
 
   type Query {
-    books: [Book]
+    villes: [Ville]
+    immeubles: [Immeuble]
+    appartements: [Appartement]
   }
 `
 
-const books = [
+const appartement = [
   {
-    title: "Harry Potter and the Chamber of Secrets",
-    author: "J.K. Rowling",
+    numero: 421,
+    nbPieces: 15,
   },
+]
+
+const immeuble = [
   {
-    title: "Jurassic Park",
-    author: "Michael Crichton",
+    nom: "Fleur de cactus",
+    adresse: "15 Rue de Archimboldo",
+    appartements: appartement,
+  },
+]
+
+const ville = [
+  {
+    nom: "Clermont-Ferrand",
+    codePostal: 63200,
+    immeubles: immeuble,
   },
 ]
 
 const resolvers = {
   Query: {
-    books: () => books,
+    villes: () => ville,
   },
 }
 
