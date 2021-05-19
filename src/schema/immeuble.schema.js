@@ -1,13 +1,19 @@
 import { Immeuble } from "../models/Immeuble"
+import { Appartement } from "../models/Appartement"
 const dummy = require("mongoose-dummy")
 const ignoredFields = ["_id", "created_at", "__v", /detail.*_info/]
 
 export const typeDef = `
   type Immeuble {
     _id: ID!
-    nom: String,
-    adresse: String,
-    appartements: [Appartement],
+    nom: String
+    adresse: String
+    appartements: [Appartement]
+  }
+
+  input ImmeubleInput {
+    nom: String
+    adresse: String
   }
 
   extend type Query {
@@ -16,49 +22,76 @@ export const typeDef = `
     immeuble(_id: ID!): Immeuble
   }
   extend type Mutation {
-    createImmeuble(name: String!,pseudo: String!): Boolean
+    createImmeuble(nom: String!,adresse: String!): Boolean
     deleteImmeuble(_id: ID!): Boolean
+    updateImmeuble(_id: ID!, input: ImmeubleInput) : Immeuble
+    ajouterAppartementToImmeuble(_id: ID!, input: AppartementInput) : Boolean
+    ajouterAppartementIDToImmeuble(_id: ID!, idApp: ID!) : Immeuble
+
   }
 `
 
 export const resolvers = {
   Query: {
-    // Get all immeubles
+    // Get a little string for schema
     immeubleSchemaAssert: async () => {
-      return "Hello world, from Immeuble schema"
+      return "C'est le schéma de immeuble"
     },
     // Get all immeubles
     immeubles: async () => {
       let immeubles = []
-      for (let index = 0; index < 3; index++) {
-        immeubles.push(
-          dummy(Immeuble, {
-            ignore: ignoredFields,
-            returnDate: true,
-          })
-        )
-      }
+      immeubles = Immeuble.find().populate("appartements")
+      console.log(immeubles)
       return immeubles
     },
     // Get immeubles by ID
     immeuble: async (root, { _id }, context, info) => {
       // With a real mongo db
-      //return Immeuble.findOne({ _id });
+      return Immeuble.findOne({ _id }).populate("appartements")
 
       //Mogoose dummy
-      return dummy(Immeuble, {
-        ignore: ignoredFields,
-        returnDate: true,
-      })
     },
   },
   Mutation: {
-    createImmeuble: async (root, args, context, info) => {
-      await Immeuble.create(args)
+    createImmeuble: async (root, { nom, adresse }, context, info) => {
+      let elem = {
+        nom: nom,
+        adresse: adresse,
+      }
+      await Immeuble.create(elem)
       return true
     },
     deleteImmeuble: async (root, { _id }, context, info) => {
       return Immeuble.remove({ _id })
+    },
+    ajouterAppartementToImmeuble: async (root, { _id, input }) => {
+      let appart = await Appartement.create(input)
+      let imm = await Immeuble.findByIdAndUpdate(_id, {
+        $push: {
+          appartements: appart,
+        },
+      })
+      imm.save()
+      return true
+    },
+
+    ajouterAppartementIDToImmeuble: async (root, { _id, idApp }) => {
+      let appart = await Appartement.findOne({ _id: idApp })
+      let imm = await Immeuble.findByIdAndUpdate(
+        _id,
+        {
+          $push: {
+            appartements: {
+              _id: appart._id,
+              numero: appart.numero,
+              nbPieces: appart.nbPieces,
+            },
+          },
+        },
+        { safe: true, upsert: true, new: true }
+      )
+      imm.save()
+      return imm
     },
   },
 }

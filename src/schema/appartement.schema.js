@@ -1,12 +1,18 @@
 import { Appartement } from "../models/Appartement"
+import { Immeuble } from "../models/Immeuble"
 const dummy = require("mongoose-dummy")
 const ignoredFields = ["_id", "created_at", "__v", /detail.*_info/]
 
 export const typeDef = `
   type Appartement {
     _id: ID!
-    numero: Int,
-    nbPieces: Int,
+    numero: Int
+    nbPieces: Int
+  }
+
+  input AppartementInput {
+    numero: Int
+    nbPieces: Int
   }
 
   extend type Query {
@@ -15,49 +21,45 @@ export const typeDef = `
     appartement(_id: ID!): Appartement
   }
   extend type Mutation {
-    createAppartement(name: String!,pseudo: String!): Boolean
+    createAppartement(numero: Int!, nbPieces: Int! ): Boolean
     deleteAppartement(_id: ID!): Boolean
+    updateAppartement(_id: ID!, input: AppartementInput) : Appartement
+
   }
 `
 
 export const resolvers = {
   Query: {
-    // Get all appartements
+    // Get a little string for schema
     appartementSchemaAssert: async () => {
-      return "Hello world, from Appartement schema"
+      return "C'est le schéma de appartement"
     },
     // Get all appartements
     appartements: async () => {
       let appartements = []
-      for (let index = 0; index < 3; index++) {
-        appartements.push(
-          dummy(Appartement, {
-            ignore: ignoredFields,
-            returnDate: true,
-          })
-        )
-      }
+      appartements = await Appartement.find()
+      console.log(appartements)
       return appartements
     },
     // Get appartements by ID
     appartement: async (root, { _id }, context, info) => {
-      // With a real mongo db
-      //return Appartement.findOne({ _id });
-
-      //Mogoose dummy
-      return dummy(Appartement, {
-        ignore: ignoredFields,
-        returnDate: true,
-      })
+      return Appartement.findOne({ _id })
     },
   },
   Mutation: {
-    createAppartement: async (root, args, context, info) => {
-      await Appartement.create(args)
+    createAppartement: async (root, { numero, nbPieces }, context, info) => {
+      let elem = {
+        numero: numero,
+        nbPieces: nbPieces,
+      }
+      await Appartement.create(elem)
       return true
     },
     deleteAppartement: async (root, { _id }, context, info) => {
       return Appartement.remove({ _id })
+    },
+    updateAppartement: async (root, { _id, input }) => {
+      return Appartement.findByIdAndUpdate(_id, input, { new: true })
     },
   },
 }
