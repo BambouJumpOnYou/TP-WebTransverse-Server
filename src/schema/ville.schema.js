@@ -65,7 +65,8 @@ export const resolvers = {
     },
 
     deleteVille: async (root, { _id }, context, info) => {
-      return Ville.remove({ _id })
+      await Ville.remove({ _id })
+      return true
     },
 
     ajouterImmeubleToVille: async (root, { _id, input }) => {

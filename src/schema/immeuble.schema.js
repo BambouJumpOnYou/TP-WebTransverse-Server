@@ -62,7 +62,8 @@ export const resolvers = {
       return true
     },
     deleteImmeuble: async (root, { _id }, context, info) => {
-      return Immeuble.remove({ _id })
+      await Immeuble.remove({ _id })
+      return true
     },
     ajouterAppartementToImmeuble: async (root, { _id, input }) => {
       let appart = await Appartement.create(input)

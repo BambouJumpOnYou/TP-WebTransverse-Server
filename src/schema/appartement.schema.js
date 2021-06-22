@@ -56,7 +56,8 @@ export const resolvers = {
       return true
     },
     deleteAppartement: async (root, { _id }, context, info) => {
-      return Appartement.remove({ _id })
+      await Appartement.remove({ _id })
+      return true
     },
     updateAppartement: async (root, { _id, input }) => {
       return Appartement.findByIdAndUpdate(_id, input, { new: true })
